@@ -1,18 +1,7 @@
-import mysql.connector
+from Conexion import *
 from mysql.connector import Error
 
-# Función para crear una conexión a la base de datos
-def create_connection():
-    connection = None
-    try:
-        connection = mysql.connector.connect(host="localhost",user="universidad",password="admin",database="lmrtours")
-        if connection.is_connected():
-            print("Conexión a la base de datos MySQL exitosa")
-    except Error as e:
-        print(f"El error '{e}' ocurrió")
-    return connection
-
-connection = create_connection()
+connection = CConexion.ConexionBaseDeDatos('root','admin','127.0.0.1','LMRTOURS','3306')
 
 # Función para ejecutar una consulta de selección
 def ejecutarConsulta(connection, consulta):
@@ -49,12 +38,17 @@ def extraerColumn(value,table):
 def imprimirMenuPrincipal():
   menu="<-------------LMR TOURS------------>\n Menu de Opciones:\n  1.- Realizar Reserva\n  2.- Realizar Consulta \n  3.- Comprar Boleto Aereo\n  4.- Crear Paquete Turistico \n  5.- Salir de su cuenta"
   print(menu) 
+  switcher = {1: realizarReserva,2: imprimirMenuConsultas,3: comprarBoleto,4: crearPack,5:'Se cerro sesión correctamente'}
+  opcion=int(input('Ingrese la opción que desea realizar: '))
+  opcionEjec=switcher.get(opcion,lambda: print("Opción no válida"))
+  opcionEjec()
 
 def imprimirMenuConsultas():
-    menu="Menu de Opciones:\n  1.- Consultar Reserva\n  2.- Consultar Paquete Turistico \n  3.- Cosultar Boleto Aereo\n  4.- Consultar Servicio \n 5.- Consultar Proveedor \n  6.- Salir del menú"
+    menu="Menu de Opciones:\n  1.- Consultar Reserva\n  2.- Consultar Paquete Turistico \n  3.- Cosultar Boleto Aereo\n  4.- Consultar Servicio\n  5.- Consultar Proveedor \n  6.- Salir del menú"
     print(menu)
 
 def realizarReserva():
+    print('<-------------CREAR RESERVA------------>')
     cedula=input('Ingrese número de cedula: ')
     if(consultarCliente(cedula)):
         print('clienteExistente')
@@ -63,8 +57,10 @@ def realizarReserva():
         print(msg)
         if(disp):
             #llamar metodo pide datos
+            print('metodo pide datos')
         else:
             #menu salir o crear paquete
+            print('salir')
 
     else: 
         print('cliente Nuevo')
@@ -81,7 +77,7 @@ def obtenerValorPaquete(idP):
 def datosReserva():
     precioU=obtenerValorPaquete()
     numPersonas=int(input('Ingrese el numero de personas que van a viajar: '))
-    montoTotal=
+    montoTotal=precioU*numPersonas
 
 def consultarDestino(destino):
     paises=extraerColumn('pais','destino')

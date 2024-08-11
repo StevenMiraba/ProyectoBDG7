@@ -1,5 +1,5 @@
 import tkinter as tk    
-
+from Conexion import * 
 
 #Importar los modulos de tkinter
 from tkinter import *
@@ -7,8 +7,7 @@ from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
 
-from Clientes import *
-from Conexion import *
+from interfaz_grafica import *
 
 class FormularioClientes:
  global base
