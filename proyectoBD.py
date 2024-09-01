@@ -30,6 +30,29 @@ def iniciarSesion(user):
     print('usuario no existente')
     return False,None,None
 
+#Funcion para obtener el nombre de los campos de la tabla
+def extraerCampos(table):
+    try:
+        cursor = connection.cursor()
+        cursor.execute("DESCRIBE "+table)
+        column_names = [column[0] for column in cursor.fetchall()]
+        cursor.close()
+        return column_names #devuelve lista
+    except mysql.connector.Error as error:
+        print("Error de ingreso de datos {}".format(error))
+
+def eliminarClientes(pk,table,campos):
+    try:
+        cursor = connection.cursor()
+        sql ="DELETE FROM "+ table+"WHERE "+campos[0]+"=%s;"
+        valores = (pk,)
+        cursor.execute(sql,valores)
+        connection.commit()
+        print(cursor.rowcount,"Registro Eliminado")
+        
+    except mysql.connector.Error as error:
+        print("Error de actualizacion de datos {}".format(error))
+
 def extraerColumn(value,table):
     consulta = "SELECT "+value+" FROM "+table
     column = ejecutarConsulta(connection,consulta)
@@ -116,8 +139,8 @@ def comprarBoleto():
 def crearPack():
     return None
 
-user=input('ingrese su usuario: ')
-cons,nombre,apellido=iniciarSesion(user)
-if(cons):
-    print('Bienvenid@: '+nombre+' '+apellido)
-    imprimirMenuPrincipal()
+#user=input('ingrese su usuario: ')
+#cons,nombre,apellido=iniciarSesion(user)
+#if(cons):
+#    print('Bienvenid@: '+nombre+' '+apellido)
+#    imprimirMenuPrincipal()
