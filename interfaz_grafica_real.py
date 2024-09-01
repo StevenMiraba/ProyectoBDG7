@@ -15,10 +15,7 @@ def modificarRegistros():
 
 def eliminarRegistros():
   print('metodo Eliminar')
-       
-def mostrarTablas():
-  print('metodo crear Tablas')
-
+    
 def tablaCompleta(contenedor,campos,datos):
   tree = ttk.Treeview(contenedor,columns=campos,show="headings")
   tree.pack(side=tk.RIGHT,expand=True,padx=10)
@@ -33,6 +30,49 @@ def tablaCompleta(contenedor,campos,datos):
   for col in campos:
     tree.heading(col, text=col)
     tree.column(col, width=max_longs[col]*9,anchor=tk.CENTER)
+     
+def tablaForm(contenedorPrincipal,table):
+  try:
+    for widget in contenedorPrincipal.winfo_children():
+      widget.destroy()
+    
+    contenedorDatos = tk.LabelFrame(contenedorPrincipal,text='Datos de '+table)
+    contenedorDatos.pack(side=tk.LEFT,padx=10,pady=10,fill=tk.X,expand=True)
+    
+    contenedorTabla = tk.LabelFrame(contenedorPrincipal,text='Tabla de '+table)
+    contenedorTabla.pack(side=tk.LEFT,padx=10,pady=10,expand=True)
+    
+    listCampos = extraerCampos(table)
+    listDatos=extraerColumn('*',table)
+    tablaCompleta(contenedorTabla,listCampos,listDatos)
+    entry_widgets = []
+    for campo in listCampos:
+      panel=tk.Frame(contenedorDatos)
+      panel.pack(fill=tk.X,pady=2)
+      
+      labelCampo = tk.Label(panel,text=campo,width=13,font=("Times New Roman",11))
+      labelCampo.pack(side=tk.LEFT)
+
+      txBoxCampo = tk.Entry(panel)
+      txBoxCampo.pack(side=tk.RIGHT,expand=True)
+      entry_widgets.append(txBoxCampo)
+      
+    contenedorBotones = tk.Frame(contenedorDatos)
+    contenedorBotones.pack(fill=tk.X,pady=5)
+    
+    btGuardar = tk.Button(contenedorBotones,text="Guardar",width=10,command=guardarRegistros)
+    btGuardar.pack(side=tk.LEFT,padx=4)
+    btModificar=tk.Button(contenedorBotones,text="Modificar",width=10,command=modificarRegistros)
+    btModificar.pack(side=tk.LEFT,padx=4)
+    btEliminar=tk.Button(contenedorBotones,text="Eliminar",width=10,command=eliminarRegistros)
+    btEliminar.pack(side=tk.LEFT,padx=4)
+    
+  except Exception as error:
+    print("Error al mostrar la interfaz, error: {}".format(error))
+        
+def mostrarTablas():
+  tableSelected = comboOpciones.get()
+  tablaForm(contenedorTablas,tableSelected)
 
 base = tk.Tk()
 base.title("LMRTOURS AGENCY")
@@ -53,6 +93,6 @@ btConsultar = tk.Button(base,text='Consultar',command=mostrarTablas)
 btConsultar.pack()
     
 contenedorTablas = tk.Frame(base)
-contenedorTablas.pack(fill=BOTH,expand=True)
+contenedorTablas.pack(fill=tk.BOTH,expand=True)
 
 base.mainloop()
