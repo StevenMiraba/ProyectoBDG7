@@ -19,6 +19,21 @@ def eliminarRegistros():
 def mostrarTablas():
   print('metodo crear Tablas')
 
+def tablaCompleta(contenedor,campos,datos):
+  tree = ttk.Treeview(contenedor,columns=campos,show="headings")
+  tree.pack(side=tk.RIGHT,expand=True,padx=10)
+
+  max_longs = {col: len(col) for col in campos}
+  for fila in datos:
+    tree.insert("", "end", values=fila)
+    for i, valor in enumerate(fila):
+      col = campos[i]
+      max_longs[col] = max(max_longs[col], len(str(valor)))
+
+  for col in campos:
+    tree.heading(col, text=col)
+    tree.column(col, width=max_longs[col]*9,anchor=tk.CENTER)
+
 base = tk.Tk()
 base.title("LMRTOURS AGENCY")
 base.geometry("1200x600")

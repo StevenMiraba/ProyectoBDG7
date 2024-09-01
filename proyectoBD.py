@@ -41,7 +41,7 @@ def extraerCampos(table):
     except mysql.connector.Error as error:
         print("Error de ingreso de datos {}".format(error))
 
-def eliminarClientes(pk,table,campos):
+def eliminarTabla(pk,table,campos):
     try:
         cursor = connection.cursor()
         sql ="DELETE FROM "+ table+"WHERE "+campos[0]+"=%s;"
