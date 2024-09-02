@@ -121,6 +121,10 @@ def tablaForm(contenedorPrincipal,contenedorModificaciones,table):
     
     listCampos = extraerCampos(table)
     listDatos=extraerColumn('*',table)
+    listViews = ['boletosMenoresA200','reservaPagoPendiente','clientesClaseEconomicaTransferenciaSinVisa','clienteReservasMas10000','top5clientes']
+    if table in listViews:
+      tablaCompleta(contenedorTabla,listCampos,listDatos)
+      return 
     tablaCompleta(contenedorTabla,listCampos,listDatos)
     entry_widgets = []
     for campo in listCampos:
@@ -159,7 +163,7 @@ base.geometry("1200x650")
 titulo=tk.Label(base,text="LMRTOURS AGENCY",font=('Times New Roman',18))
 titulo.pack()
     
-opciones = ['Cliente','Pago','Reserva','Empleado','PaqueteTuristico','Proveedor','BoletoAereo']
+opciones = ['Cliente','Pago','Reserva','Empleado','PaqueteTuristico','Proveedor','BoletoAereo','boletosMenoresA200','reservaPagoPendiente','clientesClaseEconomicaTransferenciaSinVisa','clienteReservasMas10000','top5clientes']
     
 marco = tk.Frame(base)
 marco.pack(pady=5)
