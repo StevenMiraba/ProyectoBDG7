@@ -6,9 +6,6 @@ from tkinter import messagebox
 
 from Conexion import * 
 from proyectoBD import *
-from decimal import Decimal
-from datetime import date, datetime
-from enum import Enum
 
 def extraerValEntry(listEntrys):
   listDatosIngresados = []
@@ -16,58 +13,6 @@ def extraerValEntry(listEntrys):
     dato = entry.get()
     listDatosIngresados.append(dato)
   return listDatosIngresados
-
-def obtener_tipo_dato(nombre_tipo):
-  tipos = {'int': int,'float': float,'str': str,'char': str,'varchar':str,'decimal':Decimal,'date':date,'datetime':datetime,'boolean':bool,'enum':str}
-  return tipos.get(nombre_tipo)
-
-def extraerTiposDatosModificacion(table):
-  cursor = connection.cursor()
-  procedure_name = 'actualizar'+table
-  query = f"""
-  SELECT 
-    PARAMETER_NAME, 
-    DATA_TYPE, 
-    CHARACTER_MAXIMUM_LENGTH, 
-    NUMERIC_PRECISION, 
-    NUMERIC_SCALE, 
-    DTD_IDENTIFIER
-  FROM 
-    information_schema.PARAMETERS
-  WHERE 
-    SPECIFIC_NAME = '{procedure_name}'
-    AND SPECIFIC_SCHEMA = 'LMRTOURS';
-  """
-  cursor.execute(query)
-  parameters = cursor.fetchall()
-  listaTiposDatos=[]
-  for param in parameters: 
-    listaTiposDatos.append(param[1])
-  return listaTiposDatos
-
-def extraerTiposDatosInsercion(table):
-  cursor = connection.cursor()
-  procedure_name = 'Insertar'+table
-  query = f"""
-  SELECT 
-    PARAMETER_NAME, 
-    DATA_TYPE, 
-    CHARACTER_MAXIMUM_LENGTH, 
-    NUMERIC_PRECISION, 
-    NUMERIC_SCALE, 
-    DTD_IDENTIFIER
-  FROM 
-    information_schema.PARAMETERS
-  WHERE 
-    SPECIFIC_NAME = '{procedure_name}'
-    AND SPECIFIC_SCHEMA = 'LMRTOURS';
-  """
-  cursor.execute(query)
-  parameters = cursor.fetchall()
-  listaTiposDatos=[]
-  for param in parameters: 
-    listaTiposDatos.append(param[1])
-  return listaTiposDatos
 
 def callSPInsercion(table,listEntrys):
   try:
@@ -80,48 +25,20 @@ def callSPInsercion(table,listEntrys):
     
 def insertarRegistro(table,listEntrys):
   print('metodo Guardar')
-  listaTiposDatos=[]
-  listaCampos=[]
   listaNuevosDatos=[]
-  if(table == 'cliente'):
-    listaTiposDatos=extraerTiposDatosInsercion(table)
-    listaCampos=extraerCampos(table)
+  if(table == 'Cliente'):
     listaNuevosDatos=extraerValEntry(listEntrys)
-    if any(param is None for param in listEntrys):
+    print(listaNuevosDatos)
+    """if all(listaNuevosDatos):
       print("Error: Algunos campos requeridos son nulos.")
-      return
-  elif(table == 'reserva'):
-    lis = extraerTiposDatosInsercion(table)
+      return"""
+  elif(table == 'Reserva'):
     indices = [1,3,5,6,7,8,9,10]
-    listaTiposDatos = [lis[i] for i in indices]
-    listaCampos= [extraerCampos(table)[i] for i in indices]
     listaNuevosDatos=[extraerValEntry(listEntrys)[i] for i in indices]
-    if any(param is None for param in [listEntrys[i] for i in indices]):
-      print("Error: Algunos campos requeridos son nulos.")
-      return
   else:
-    listaTiposDatos=extraerTiposDatosInsercion(table)
-    print(listaTiposDatos)
-    listaCampos=extraerCampos(table)[1:]
-    print(listaCampos)
     listaNuevosDatos=extraerValEntry(listEntrys[1:])
     print(listaNuevosDatos)
-    if any(param is None for param in listEntrys[1:]):
-      print("Error: Algunos campos requeridos son nulos.")
-      return
-  listaAutilizar=[]
-  for i in range(len(listaNuevosDatos)):
-    tipoDato=obtener_tipo_dato(listaTiposDatos[i])
-    if tipoDato == date:
-      fecha = datetime.strptime(listaNuevosDatos[i], '%Y-%m-%d').date()
-      listaAutilizar.append(fecha)
-    elif tipoDato == datetime:
-      fechaHora = datetime.strptime(listaNuevosDatos[i], "%Y-%m-%d %H:%M:%S")
-      listaAutilizar.append(fechaHora)
-    else:
-      listaAutilizar.append(tipoDato(listaNuevosDatos[i]))
-  print(listaAutilizar)
-  callSPInsercion(table,listaAutilizar)
+  callSPInsercion(table,listaNuevosDatos)
   mostrarTablas()
       
 def callSPModificacion(table,listEntrys):
@@ -138,41 +55,32 @@ def modificarRegistro(table,listEntrys):
   if any(param is None for param in listEntrys):
     print("Error: Algunos campos requeridos estan nulos.")
     return
-  listaTiposDatos=extraerTiposDatosModificacion(table)
-  listaCampos=extraerCampos(table)
   listaNuevosDatos=extraerValEntry(listEntrys)
-  listaAutilizar=[]
-  for i in range(len(listaNuevosDatos)):
-    tipoDato=obtener_tipo_dato(listaTiposDatos[i])
-    if tipoDato == date:
-      fecha = datetime.strptime(listaNuevosDatos[i], '%Y-%m-%d').date()
-      listaAutilizar.append(fecha)
-    elif tipoDato == datetime:
-      fechaHora = datetime.strptime(listaNuevosDatos[i], "%Y-%m-%d %H:%M:%S")
-      listaAutilizar.append(fechaHora)
-    else:
-      listaAutilizar.append(tipoDato(listaNuevosDatos[i]))
-  callSPModificacion(table,listaAutilizar)
+  callSPModificacion(table,listaNuevosDatos)
   mostrarTablas()
   
 def callSPEliminacion(table,campoPk):
     try:
-        cursor = connection.cursor()
-        if table=='cliente':
-          cursor.callproc(('eliminar'+table),[CHAR(campoPk)])
-          connection.commit()
-        else:
-          cursor.callproc(('eliminar'+table),[int(campoPk)])
-          connection.commit()
+      cursor = connection.cursor()
+      cursor.callproc(('eliminar'+table),[campoPk])
+      connection.commit()
     except Error as e:
         print("Error", f"Error al eliminar registro: {e}")
         connection.rollback()
+        
+def ejecutarBaceptarEliminar(table,contenedorBox):
+  campoPk = str(contenedorBox.get().strip())
+  if not campoPk:
+    print("Error: El campo clave primaria está vacío.")
+    return
+  callSPEliminacion(table, campoPk)
+  mostrarTablas()        
         
 def eliminarRegistro(table,contenedor):
   print('metodo Eliminar')
   camp=extraerCampos(table)[0]
   panelEliminar=tk.Frame(contenedor)
-  panelEliminar.pack(fill=tk.X,pady=2)
+  panelEliminar.pack(fill=tk.BOTH,pady=2)
   labelCampoEliminar = tk.Label(panelEliminar,text=camp,width=13,font=("Times New Roman",13))
   labelCampoEliminar.pack(side=tk.LEFT)
   txBoxCampoEliminar= tk.Entry(panelEliminar)
@@ -182,7 +90,7 @@ def eliminarRegistro(table,contenedor):
   
 def tablaCompleta(contenedor,campos,datos):
   tree = ttk.Treeview(contenedor,columns=campos,show="headings")
-  tree.pack(side=tk.RIGHT,expand=True,padx=10)
+  tree.pack(side=tk.RIGHT,fil=tk.BOTH,expand=True,padx=10)
 
   max_longs = {col: len(col) for col in campos}
   for fila in datos:
@@ -206,7 +114,7 @@ def tablaForm(contenedorPrincipal,contenedorModificaciones,table):
     contenedorDatos.pack(side=tk.LEFT,padx=8,pady=8,fill=tk.X,expand=True)
     
     contenedorTabla = tk.LabelFrame(contenedorPrincipal,text='Tabla de '+table)
-    contenedorTabla.pack(side=tk.LEFT,padx=8,pady=8,expand=True)
+    contenedorTabla.pack(side=tk.LEFT,padx=8,pady=8,fill=tk.BOTH,expand=True)
     
     contenedorBT = tk.Frame(contenedorModificaciones)
     contenedorBT.pack(side=tk.LEFT,padx=3,pady=3,expand=True)
@@ -244,22 +152,6 @@ def tablaForm(contenedorPrincipal,contenedorModificaciones,table):
 def mostrarTablas():
   tableSelected = comboOpciones.get()
   tablaForm(contenedorTablas,contenedorCRUD,tableSelected)
-
-def ejecutarBaceptarEliminar(table,contenedor):
-  campoPk = contenedor.get().strip()
-  if not campoPk:
-    print("Error: El campo clave primaria está vacío.")
-    return
-  try:
-    if table == 'cliente':
-      campoPk = CHAR(campoPk)
-    else:
-      campoPk = int(campoPk)
-  except ValueError:
-    print("Error: El campo clave primaria no es un número válido.")
-    return
-  callSPEliminacion(table, campoPk)
-  mostrarTablas()
   
 base = tk.Tk()
 base.title("LMRTOURS AGENCY")

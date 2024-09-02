@@ -47,9 +47,9 @@ def listUsuarios():
 def iniciarSesion(user):
     nombres,apellidos,usuarios,claves = listUsuarios()
     for i in range(len(usuarios)):
-        if(user in usuarios[i]):
+        if(user == usuarios[i]):
             password=input('Ingrese su contraseña: ')
-            while(not(password in claves[i])):
+            while(not(password == claves[i])):
                 print('contraseña incorrecta')
                 password=input('Ingrese correctamente su contraseña: ')
             return True,nombres[i],apellidos[i]
