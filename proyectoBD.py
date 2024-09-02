@@ -1,11 +1,22 @@
 from Conexion import *
 from mysql.connector import Error
 
-connection = CConexion.ConexionBaseDeDatos('root','admin','127.0.0.1','LMRTOURS','3306')
+accessDB = False
+connection = ''
+while not accessDB:
+    acceder = input('Ingrese su usuario de la base de datos: ')
+    passw = input('Ingrese su clave: ')
+    connection = CConexion.ConexionBaseDeDatos(acceder,passw,'127.0.0.1','LMRTOURS','3306')
+    if connection:
+        print('Acceso a la base de datos completado correctamente')
+        accessDB = True  
+    else:
+        print('Ingreso fallido, intente de nuevo')
+        accessDB = False
 
-# Función para ejecutar una consulta de selección
-def ejecutarConsulta(connection, consulta):
-    cursor = connection.cursor()
+# Función para ejecutar una consulta
+def ejecutarConsulta(conection, consulta):
+    cursor = conection.cursor()
     result = None
     try:
         cursor.execute(consulta)
@@ -15,20 +26,83 @@ def ejecutarConsulta(connection, consulta):
         print(f"El error '{e}' ocurrió")
         return None
 
+def extraerColumn(value,table):
+    consulta = "SELECT "+value+" FROM "+table
+    column = ejecutarConsulta(connection,consulta)
+    return column
+
+def listUsuarios():
+    listCompleta = extraerColumn('*','empleado')
+    nom = []
+    ape = []
+    usua = []
+    clav = []
+    for usuario in listCompleta:
+        nom.append(usuario[1])
+        ape.append(usuario[2])
+        usua.append(usuario[3])
+        clav.append(usuario[4])
+    return nom,ape,usua,clav   
+
 def iniciarSesion(user):
-    nombres=extraerColumn('nombre','empleado')
-    apellidos=extraerColumn('apellido','empleado')
-    usuarios = extraerColumn('usuario','empleado')
-    claves = extraerColumn('clave','empleado')
+    nombres,apellidos,usuarios,claves = listUsuarios()
     for i in range(len(usuarios)):
         if(user in usuarios[i]):
             password=input('Ingrese su contraseña: ')
             while(not(password in claves[i])):
                 print('contraseña incorrecta')
                 password=input('Ingrese correctamente su contraseña: ')
-            return True,nombres[i][0],apellidos[i][0]
+            return True,nombres[i],apellidos[i]
     print('usuario no existente')
     return False,None,None
+
+def extraerTiposDatosInsercion(table):
+  cursor = connection.cursor()
+  procedure_name = 'Insertar'+table
+  query = f"""
+  SELECT 
+    PARAMETER_NAME, 
+    DATA_TYPE, 
+    CHARACTER_MAXIMUM_LENGTH, 
+    NUMERIC_PRECISION, 
+    NUMERIC_SCALE, 
+    DTD_IDENTIFIER
+  FROM 
+    information_schema.PARAMETERS
+  WHERE 
+    SPECIFIC_NAME = '{procedure_name}'
+    AND SPECIFIC_SCHEMA = 'LMRTOURS';
+  """
+  cursor.execute(query)
+  parameters = cursor.fetchall()
+  listaTiposDatos=[]
+  for param in parameters: 
+    listaTiposDatos.append(param[1])
+  return listaTiposDatos
+
+def extraerTiposDatosModificacion(table):
+  cursor = connection.cursor()
+  procedure_name = 'actualizar'+table
+  query = f"""
+  SELECT 
+    PARAMETER_NAME, 
+    DATA_TYPE, 
+    CHARACTER_MAXIMUM_LENGTH, 
+    NUMERIC_PRECISION, 
+    NUMERIC_SCALE, 
+    DTD_IDENTIFIER
+  FROM 
+    information_schema.PARAMETERS
+  WHERE 
+    SPECIFIC_NAME = '{procedure_name}'
+    AND SPECIFIC_SCHEMA = 'LMRTOURS';
+  """
+  cursor.execute(query)
+  parameters = cursor.fetchall()
+  listaTiposDatos=[]
+  for param in parameters: 
+    listaTiposDatos.append(param[1])
+  return listaTiposDatos
 
 #Funcion para obtener el nombre de los campos de la tabla
 def extraerCampos(table):
@@ -52,11 +126,6 @@ def eliminarTabla(pk,table,campos):
         
     except mysql.connector.Error as error:
         print("Error de actualizacion de datos {}".format(error))
-
-def extraerColumn(value,table):
-    consulta = "SELECT "+value+" FROM "+table
-    column = ejecutarConsulta(connection,consulta)
-    return column
 
 def imprimirMenuPrincipal():
   menu="<-------------LMR TOURS------------>\n Menu de Opciones:\n  1.- Realizar Reserva\n  2.- Realizar Consulta \n  3.- Comprar Boleto Aereo\n  4.- Crear Paquete Turistico \n  5.- Salir de su cuenta"
@@ -139,8 +208,7 @@ def comprarBoleto():
 def crearPack():
     return None
 
-#user=input('ingrese su usuario: ')
-#cons,nombre,apellido=iniciarSesion(user)
-#if(cons):
-#    print('Bienvenid@: '+nombre+' '+apellido)
-#    imprimirMenuPrincipal()
+user=input('ingrese su usuario: ')
+cons,nombre,apellido=iniciarSesion(user)
+if(cons):
+    print('Bienvenid@: '+nombre+' '+apellido)
