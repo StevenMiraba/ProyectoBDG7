@@ -67,10 +67,34 @@ def extraerTiposDatosModificacion(table):
     listaTiposDatos.append(param[1])
   return listaTiposDatos
 
+def extraerTiposDatosInsercion(table):
+  cursor = connection.cursor()
+  procedure_name = 'Insertar'+table
+  query = f"""
+  SELECT 
+    PARAMETER_NAME, 
+    DATA_TYPE, 
+    CHARACTER_MAXIMUM_LENGTH, 
+    NUMERIC_PRECISION, 
+    NUMERIC_SCALE, 
+    DTD_IDENTIFIER
+  FROM 
+    information_schema.PARAMETERS
+  WHERE 
+    SPECIFIC_NAME = '{procedure_name}'
+    AND SPECIFIC_SCHEMA = 'LMRTOURS';
+  """
+  cursor.execute(query)
+  parameters = cursor.fetchall()
+  listaTiposDatos=[]
+  for param in parameters: 
+    listaTiposDatos.append(param[1])
+  return listaTiposDatos
+
 def callSPInsercion(table,listEntrys):
   try:
     cursor = connection.cursor()
-    cursor.callproc(('insertar'+table),listEntrys[1:])
+    cursor.callproc(('insertar'+table),listEntrys)
     connection.commit()
   except Error as e:
     print("Error", f"Error al insertar registro: {e}")
@@ -78,10 +102,51 @@ def callSPInsercion(table,listEntrys):
     
 def insertarRegistro(table,listEntrys):
   print('metodo Guardar')
-  if any(param is None for param in listEntrys[1:]):
-    print("Error: Algunos campos requeridos son nulos.")
-    return
-  callSPInsercion(table,listEntrys)
+  listaTiposDatos=[]
+  listaCampos=[]
+  listaNuevosDatos=[]
+  if(table == 'cliente'):
+    listaTiposDatos=extraerTiposDatosInsercion(table)
+    listaCampos=extraerCampos(table)
+    listaNuevosDatos=extraerValEntry(listEntrys)
+    if any(param is None for param in listEntrys):
+      print("Error: Algunos campos requeridos son nulos.")
+      return
+  elif(table == 'reserva'):
+    lis = extraerTiposDatosInsercion(table)
+    indices = [1,3,5,6,7,8,9,10]
+    listaTiposDatos = [lis[i] for i in indices]
+    listaCampos= [extraerCampos(table)[i] for i in indices]
+    listaNuevosDatos=[extraerValEntry(listEntrys)[i] for i in indices]
+    if any(param is None for param in [listEntrys[i] for i in indices]):
+      print("Error: Algunos campos requeridos son nulos.")
+      return
+  else:
+    listaTiposDatos=extraerTiposDatosInsercion(table)
+    print(listaTiposDatos)
+    listaCampos=extraerCampos(table)[1:]
+    print(listaCampos)
+    listaNuevosDatos=extraerValEntry(listEntrys[1:])
+    print(listaNuevosDatos)
+    if any(param is None for param in listEntrys[1:]):
+      print("Error: Algunos campos requeridos son nulos.")
+      return
+  listaAutilizar=[]
+  for i in range(len(listaNuevosDatos)):
+    tipoDato=obtener_tipo_dato(listaTiposDatos[i])
+    if tipoDato == Enum:
+      listaAutilizar.append(string_a_enum(listaCampos[i],listaNuevosDatos[i]))
+    elif tipoDato == date:
+      fecha = datetime.strptime(listaNuevosDatos[i], '%Y-%m-%d').date()
+      listaAutilizar.append(fecha)
+    elif tipoDato == datetime:
+      fechaHora = datetime.strptime(listaNuevosDatos[i], "%Y-%m-%d %H:%M:%S")
+      listaAutilizar.append(fechaHora)
+    else:
+      listaAutilizar.append(tipoDato(listaNuevosDatos[i]))
+  print(listaAutilizar)
+  callSPInsercion(table,listaAutilizar)
+  mostrarTablas()
       
 def callSPModificacion(table,listEntrys):
   try:
@@ -108,6 +173,9 @@ def modificarRegistro(table,listEntrys):
     elif tipoDato == date:
       fecha = datetime.strptime(listaNuevosDatos[i], '%Y-%m-%d').date()
       listaAutilizar.append(fecha)
+    elif tipoDato == datetime:
+      fechaHora = datetime.strptime(listaNuevosDatos[i], "%Y-%m-%d %H:%M:%S")
+      listaAutilizar.append(fechaHora)
     else:
       listaAutilizar.append(tipoDato(listaNuevosDatos[i]))
   callSPModificacion(table,listaAutilizar)
@@ -191,7 +259,7 @@ def tablaForm(contenedorPrincipal,contenedorModificaciones,table):
     #btGuardar.pack(side=tk.LEFT,padx=4)
     btModificar=tk.Button(contenedorBotones,text="Modificar",width=10,command=lambda:modificarRegistro(table,entry_widgets))
     btModificar.pack(side=tk.LEFT,padx=4,anchor=tk.CENTER)
-    btGuardar = tk.Button(contenedorBT,text="Guardar",width=10,command=lambda: insertarRegistro(table,entry_widgets))
+    btGuardar = tk.Button(contenedorBotones,text="Guardar",width=10,command=lambda:insertarRegistro(table,entry_widgets))
     btGuardar.pack(side=tk.LEFT, padx=10)
     btEliminar=tk.Button(contenedorBT,text="Eliminar",width=10,command=lambda:eliminarRegistro(table,contenedorCRUD))
     btEliminar.pack(side=tk.LEFT, padx=10)
