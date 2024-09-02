@@ -7,14 +7,58 @@ from tkinter import messagebox
 from Conexion import * 
 from proyectoBD import *
 
-def guardarRegistros():
-   print('metodo Guardar')
-   
-def modificarRegistros():
+def callSPInsercion(table,listEntrys):
+  try:
+    cursor = connection.cursor()
+    cursor.callproc(('insertar'+table),listEntrys[1:])
+    connection.commit()
+  except Error as e:
+    print("Error", f"Error al insertar registro: {e}")
+    connection.rollback()
+    
+def insertarRegistro(table,listEntrys):
+  print('metodo Guardar')
+  if any(param is None for param in listEntrys[1:]):
+    print("Error: Algunos campos requeridos son nulos.")
+    return
+  callSPInsercion(table,listEntrys)
+      
+def callSPModificacion(table,listEntrys):
+  try:
+    cursor = connection.cursor()
+    cursor.callproc(('actualizar'+table),listEntrys)
+    connection.commit()
+  except Error as e:
+    print("Error", f"Error al actualizar registro: {e}")
+    connection.rollback()
+  
+def modificarRegistro(table,listEntrys):
   print('metodo Modificar')
+  if any(param is None for param in listEntrys):
+    print("Error: Algunos campos requeridos son nulos.")
+    return
+  callSPModificacion(table,listEntrys)
+  
 
-def eliminarRegistros():
+def callSPEliminacion(table,campoPk):
+    try:
+        cursor = connection.cursor()
+        cursor.callproc(('eliminar'+table),[int(campoPk)])
+        connection.commit()
+    except Error as e:
+        print("Error", f"Error al eliminar registro: {e}")
+        connection.rollback()
+        
+def eliminarRegistro(table,listEntrys):
   print('metodo Eliminar')
+  campoPk=listEntrys[0].get()
+  if not campoPk:
+    print("Error", "El campo PK está vacío")
+    return
+  callSPEliminacion(table,campoPk)
+  mostrarTablas()
+
+
     
 def tablaCompleta(contenedor,campos,datos):
   tree = ttk.Treeview(contenedor,columns=campos,show="headings")
@@ -60,11 +104,11 @@ def tablaForm(contenedorPrincipal,table):
     contenedorBotones = tk.Frame(contenedorDatos)
     contenedorBotones.pack(fill=tk.X,pady=5)
     
-    btGuardar = tk.Button(contenedorBotones,text="Guardar",width=10,command=guardarRegistros)
+    btGuardar = tk.Button(contenedorBotones,text="Guardar",width=10,command=lambda: insertarRegistro(table,entry_widgets))
     btGuardar.pack(side=tk.LEFT,padx=4)
-    btModificar=tk.Button(contenedorBotones,text="Modificar",width=10,command=modificarRegistros)
+    btModificar=tk.Button(contenedorBotones,text="Modificar",width=10,command=lambda:modificarRegistro)
     btModificar.pack(side=tk.LEFT,padx=4)
-    btEliminar=tk.Button(contenedorBotones,text="Eliminar",width=10,command=eliminarRegistros)
+    btEliminar=tk.Button(contenedorBotones,text="Eliminar",width=10,command=lambda:eliminarRegistro(table,entry_widgets))
     btEliminar.pack(side=tk.LEFT,padx=4)
     
   except Exception as error:
