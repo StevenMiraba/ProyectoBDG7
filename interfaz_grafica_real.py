@@ -10,22 +10,6 @@ from decimal import Decimal
 from datetime import date, datetime
 from enum import Enum
 
-class estadoPago(Enum):
-    PENDIENTE = 'PENDIENTE'
-    COMPLETADO = 'COMPLETADO'
-
-class formaPago(Enum):
-  TC = 'TC'
-  TD = 'TD'
-  Efectivo = 'EFECTIVO'
-  @classmethod
-  def from_string(cls, cadena):
-    try:
-      return cls[cadena.upper()]
-    except KeyError:
-      print(f"Valor '{cadena}' no es un miembro válido de {cls.__name__}")
-      return None
-  
 def extraerValEntry(listEntrys):
   listDatosIngresados = []
   for entry in listEntrys:
@@ -33,14 +17,8 @@ def extraerValEntry(listEntrys):
     listDatosIngresados.append(dato)
   return listDatosIngresados
 
-def string_a_enum(nameEnum, stringValue):
-    try:
-        return nameEnum[stringValue.upper()].value
-    except KeyError:
-        raise ValueError(f"{stringValue} no es un miembro válido de {nameEnum.__name__}")
-
 def obtener_tipo_dato(nombre_tipo):
-  tipos = {'int': int,'float': float,'str': str,'char': str,'varchar':str,'decimal':Decimal,'date':date,'datetime':datetime,'boolean':bool,'enum':Enum}
+  tipos = {'int': int,'float': float,'str': str,'char': str,'varchar':str,'decimal':Decimal,'date':date,'datetime':datetime,'boolean':bool,'enum':str}
   return tipos.get(nombre_tipo)
 
 def extraerTiposDatosModificacion(table):
@@ -134,9 +112,7 @@ def insertarRegistro(table,listEntrys):
   listaAutilizar=[]
   for i in range(len(listaNuevosDatos)):
     tipoDato=obtener_tipo_dato(listaTiposDatos[i])
-    if tipoDato == Enum:
-      listaAutilizar.append(string_a_enum(listaCampos[i],listaNuevosDatos[i]))
-    elif tipoDato == date:
+    if tipoDato == date:
       fecha = datetime.strptime(listaNuevosDatos[i], '%Y-%m-%d').date()
       listaAutilizar.append(fecha)
     elif tipoDato == datetime:
@@ -168,9 +144,7 @@ def modificarRegistro(table,listEntrys):
   listaAutilizar=[]
   for i in range(len(listaNuevosDatos)):
     tipoDato=obtener_tipo_dato(listaTiposDatos[i])
-    if tipoDato == Enum:
-      listaAutilizar.append(string_a_enum(listaCampos[i],listaNuevosDatos[i]))
-    elif tipoDato == date:
+    if tipoDato == date:
       fecha = datetime.strptime(listaNuevosDatos[i], '%Y-%m-%d').date()
       listaAutilizar.append(fecha)
     elif tipoDato == datetime:
