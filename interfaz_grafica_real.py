@@ -106,7 +106,7 @@ def tablaForm(contenedorPrincipal,table):
     
     btGuardar = tk.Button(contenedorBotones,text="Guardar",width=10,command=lambda: insertarRegistro(table,entry_widgets))
     btGuardar.pack(side=tk.LEFT,padx=4)
-    btModificar=tk.Button(contenedorBotones,text="Modificar",width=10,command=lambda:modificarRegistro)
+    btModificar=tk.Button(contenedorBotones,text="Modificar",width=10,command=lambda:modificarRegistro(table,entry_widgets))
     btModificar.pack(side=tk.LEFT,padx=4)
     btEliminar=tk.Button(contenedorBotones,text="Eliminar",width=10,command=lambda:eliminarRegistro(table,entry_widgets))
     btEliminar.pack(side=tk.LEFT,padx=4)
